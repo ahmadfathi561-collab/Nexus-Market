@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); border: 1px solid #e2e8f0; }
+        .active-user { background: #6366f1 !important; color: white !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tighter italic">NEXUS ADMIN</h1>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">System Management & Analytics</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="location.href='market.html'" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm">Marketplace</button>
+                <button onclick="logout()" class="px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-all shadow-lg">Logout</button>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 flex items-center gap-4">
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl text-2xl">👥</div>
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase">Total Users</p>
+                    <p id="statUsers" class="text-2xl font-black text-slate-800">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 flex items-center gap-4">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl text-2xl">📦</div>
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase">Active Ads</p>
+                    <p id="statAds" class="text-2xl font-black text-slate-800">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar: Users List -->
+            <aside class="lg:col-span-1 glass-panel p-5 rounded-[2rem] shadow-sm">
+                <h2 class="text-xs font-black uppercase text-slate-400 mb-4 px-2">Accounts</h2>
+                <input type="text" id="userSearch" oninput="loadUsers()" placeholder="Search users..." class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none mb-4">
+                <div id="usersList" class="space-y-2 custom-scrollbar max-h-[500px] overflow-y-auto pl-1"></div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="lg:col-span-3">
+                <div id="placeholderView" class="glass-panel rounded-[2.5rem] p-20 flex flex-col items-center justify-center text-center min-h-[400px]">
+                    <div class="text-6xl mb-4 opacity-20">📡</div>
+                    <p class="text-slate-400 font-bold text-sm uppercase tracking-widest">Select a user to review data</p>
+                </div>
+
+                <div id="userProfileView" class="hidden">
+                    <div id="userInfoCard" class="glass-panel rounded-[2.5rem] p-8 mb-6 shadow-sm"></div>
+                    <div class="glass-panel rounded-[2.5rem] p-8">
+                        <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">User Listings</h3>
+                        <div id="adsGrid" class="grid grid-cols-1 gap-4"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        let selectedUserEmail = '';
+        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+            const list = document.getElementById('usersList');
+            
+            document.getElementById('statUsers').innerText = users.length;
+            let totalAds = 0;
+            users.forEach(u => totalAds += (u.ads ? u.ads.length : 0));
+            document.getElementById('statAds').innerText = totalAds;
+
+            const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm) || u.email.toLowerCase().includes(searchTerm));
+
+            list.innerHTML = filteredUsers.map(user => `
+                <div onclick="viewUser('${user.email}')" class="p-4 rounded-2xl cursor-pointer border flex items-center justify-between transition-all ${selectedUserEmail === user.email ? 'active-user' : 'bg-white border-transparent shadow-sm hover:border-indigo-100'}">
+                    <div class="min-w-0 text-left">
+                        <p class="font-black text-sm truncate">${user.name}</p>
+                        <p class="text-[10px] opacity-60 truncate">${user.email}</p>
+                    </div>
+                    <div class="w-2.5 h-2.5 rounded-full ${user.status === 'active' ? 'bg-green-400' : 'bg-red-500'}"></div>
+                </div>
+            `).join('');
+        }
+
+        function viewUser(email) {
+            selectedUserEmail = email;
+            loadUsers();
+            const user = (JSON.parse(localStorage.getItem('users')) || []).find(u => u.email === email);
+            document.getElementById('placeholderView').classList.add('hidden');
+            document.getElementById('userProfileView').classList.remove('hidden');
+
+            document.getElementById('userInfoCard').innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-start gap-6 text-left">
+                    <div class="flex-1">
+                        <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase mb-3 inline-block">User Profile</span>
+                        <h2 class="text-3xl font-black text-slate-900">${user.name}</h2>
+                        <p class="text-indigo-600 font-bold mb-6">${user.email}</p>
+                        <div class="flex gap-3">
+                            <button onclick="updateStatus('${user.email}')" class="bg-slate-900 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-indigo-600 transition-all shadow-md">
+                                ${user.status === 'active' ? 'Suspend Account' : 'Activate Account'}
+                            </button>
+                            <button onclick="removeAccount('${user.email}')" class="bg-red-50 text-red-600 px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-all">Delete Account</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 w-full md:w-64">
+                        <p class="text-[10px] text-slate-400 font-black uppercase mb-1">Password</p>
+                        <div class="flex items-center justify-between">
+                            <input type="password" readonly value="${user.password || '****'}" id="passField" class="bg-transparent border-none font-black text-slate-700 w-full outline-none">
+                            <button onclick="togglePass()" class="text-[10px] font-black text-indigo-500 uppercase">Show</button>
+                        </div>
+                    </div>
+                </div>`;
+            renderAds(user);
+        }
+
+        function renderAds(user) {
+            const adsGrid = document.getElementById('adsGrid');
+            if (!user.ads || user.ads.length === 0) {
+                adsGrid.innerHTML = `<div class="py-10 text-center bg-slate-50 rounded-2xl border border-dashed text-slate-400 text-xs font-bold uppercase">No active listings found</div>`;
+                return;
+            }
+            adsGrid.innerHTML = user.ads.map((ad, idx) => `
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 text-left">
+                    <img src="${(ad.img && ad.img[0]) || 'https://via.placeholder.com/150'}" class="w-16 h-16 rounded-xl object-cover bg-slate-100">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between">
+                            <h4 class="font-black text-slate-800 text-sm truncate uppercase">${ad.title}</h4>
+                            <p class="text-indigo-600 font-black text-sm">${ad.price} <span class="text-[10px]">EGP</span></p>
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-400 mt-1">${ad.date || 'Today'} | Views: ${ad.views || 0}</p>
+                    </div>
+                    <button onclick="removeAd('${user.email}', ${idx})" class="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                </div>`).join('');
+        }
+
+        function togglePass() {
+            const input = document.getElementById('passField');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function updateStatus(email) {
+            let users = JSON.parse(localStorage.getItem('users'));
+            const idx = users.findIndex(u => u.email === email);
+            users[idx].status = (users[idx].status === 'active') ? 'suspended' : 'active';
+            localStorage.setItem('users', JSON.stringify(users));
+            viewUser(email);
+            Toast.fire({ icon: 'info', title: 'Status updated' });
+        }
+
+        function removeAccount(email) {
+            Swal.fire({ 
+                title: 'Delete Account?', 
+                text: "All user data will be permanently removed.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#d33', 
+                confirmButtonText: 'Delete' 
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let users = JSON.parse(localStorage.getItem('users')).filter(u => u.email !== email);
+                    localStorage.setItem('users', JSON.stringify(users));
+                    location.reload();
+                }
+            });
+        }
+
+        function removeAd(email, index) {
+            let users = JSON.parse(localStorage.getItem('users'));
+            const uIdx = users.findIndex(u => u.email === email);
+            users[uIdx].ads.splice(index, 1);
+            localStorage.setItem('users', JSON.stringify(users));
+            viewUser(email);
+            Toast.fire({ icon: 'success', title: 'Ad removed successfully' });
+        }
+
+        function logout() { window.location.href = 'login.html'; }
+        loadUsers();
+    </script>
+</body>
+</html>

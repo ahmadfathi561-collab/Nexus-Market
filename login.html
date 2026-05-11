@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Premium Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, #4f46e5, #7c3aed, #db2777);
+            background-attachment: fixed;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 3rem;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-style {
+            background: rgba(241, 245, 249, 0.8);
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .input-style:focus {
+            border-color: #6366f1;
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        /* تنسيق أيقونة العين */
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .eye-icon {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+        .eye-icon:hover {
+            color: #6366f1;
+        }
+
+        .hidden-form { display: none; }
+
+        #msgBox {
+            transition: all 0.4s ease;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+        #msgBox.show {
+            max-height: 100px;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="w-full max-w-md px-6 animate__animated animate__zoomIn">
+        <div class="glass-card p-8 pt-6 pb-6 relative overflow-hidden">
+            
+            <div id="msgBox" class="rounded-xl text-center p-3 text-xs font-bold animate__animated shadow-lg">
+                <span id="msgContent"></span>
+            </div>
+
+            <div class="text-center mb-6">
+                <div class="inline-block p-3 bg-indigo-600 rounded-2xl shadow-xl mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">Nexus</h1>
+                <p id="formSubtitle" class="text-slate-500 font-bold text-xs mt-1">Join the future.</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3 animate__animated">
+                <input type="email" id="loginEmail" placeholder="Email Address" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
+                <div class="password-container">
+                    <input type="password" id="loginPass" placeholder="Password" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
+                    <span class="eye-icon" onclick="togglePassword('loginPass')">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </span>
+                </div>
+                <div class="text-right">
+                    <a href="#" onclick="showRecovery()" class="text-[11px] font-bold text-indigo-600 hover:underline">Forgot Password?</a>
+                </div>
+                <button class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:bg-indigo-700 transition-all active:scale-95">Sign In</button>
+                <p class="text-center text-[11px] font-bold text-slate-400">New here? <a href="#" onclick="toggleForms('register')" class="text-indigo-600 hover:underline">Register</a></p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden-form animate__animated">
+                <div class="grid grid-cols-2 gap-2"> 
+                    <input type="text" id="regName" placeholder="Full Name" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-xs">
+                    <input type="tel" id="regPhone" placeholder="Phone" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-xs">
+                </div>
+                <input type="email" id="regEmail" placeholder="Email Address" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-xs">
+                
+                <div class="password-container">
+                    <input type="password" id="regPass" placeholder="Password" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-xs">
+                    <span class="eye-icon" onclick="togglePassword('regPass')">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </span>
+                </div>
+
+                <div class="password-container">
+                    <input type="password" id="regConfirmPass" placeholder="Confirm Password" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-xs">
+                    <span class="eye-icon" onclick="togglePassword('regConfirmPass')">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </span>
+                </div>
+
+                <p class="text-[10px] text-slate-400 px-1 leading-tight -mt-1">Password must include (A, a, 1, @) & 8 chars.</p>
+                <button class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:bg-indigo-700 active:scale-95">Create Account</button>
+                <p class="text-center text-[11px] font-bold text-slate-400">Back to <a href="#" onclick="toggleForms('login')" class="text-indigo-600 hover:underline">Login</a></p>
+            </form>
+
+            <!-- Recovery Form -->
+            <form id="recoveryForm" onsubmit="handleRecovery(event)" class="space-y-3 hidden-form animate__animated">
+                <p class="text-[11px] text-slate-500 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100 mb-2 leading-snug">
+                    Enter email and phone to see your password.
+                </p>
+                <input type="email" id="recEmail" placeholder="Your Email" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
+                <input type="tel" id="recPhone" placeholder="Your Phone" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
+                <button class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-black text-sm shadow-xl active:scale-95">Find My Password</button>
+                <p class="text-center text-[11px] font-bold text-slate-400"><a href="#" onclick="toggleForms('login')" class="text-indigo-600">Return to Login</a></p>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Modal Password Found -->
+    <div id="recoveryModal" class="fixed inset-0 hidden flex items-center justify-center p-6 z-50 bg-black/60 backdrop-blur-md">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center animate__animated animate__bounceIn">
+            <h3 class="text-xl font-black text-slate-800 mb-2 leading-tight">Password Found!</h3>
+            <p class="text-xs text-slate-500 mb-3 font-medium">Write it down somewhere safe:</p>
+            <span id="revealedPass" class="text-indigo-600 font-black text-2xl tracking-widest bg-indigo-50 px-5 py-2.5 rounded-xl mb-3 inline-block border border-indigo-100 shadow-inner"></span>
+            <button onclick="closeModal()" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold mt-2 text-sm shadow-xl shadow-indigo-100">Got it!</button>
+        </div>
+    </div>
+
+    <script>
+        const forms = { login: document.getElementById('loginForm'), register: document.getElementById('registerForm'), recovery: document.getElementById('recoveryForm') };
+        const msgBox = document.getElementById('msgBox');
+        const msgContent = document.getElementById('msgContent');
+
+        // وظيفة إظهار وإخفاء كلمة المرور
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+            } else {
+                input.type = "password";
+            }
+        }
+
+        function showMsg(text, type = 'error') {
+            msgContent.innerText = text;
+            msgBox.className = `rounded-xl text-center p-3 text-xs font-bold animate__animated animate__shakeX show shadow-lg ${type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`;
+            
+            setTimeout(() => {
+                msgBox.classList.remove('show');
+            }, 3000);
+        }
+
+        function isStrongPassword(pass) { return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pass); }
+        function isValidPhone(phone) { return /^[0-9]{10,15}$/.test(phone); }
+
+        function toggleForms(target) {
+            Object.values(forms).forEach(f => { f.classList.add('hidden-form'); f.classList.remove('animate__fadeInRight'); });
+            forms[target].classList.remove('hidden-form');
+            forms[target].classList.add('animate__fadeInRight');
+            msgBox.classList.remove('show');
+        }
+
+        function showRecovery() { toggleForms('recovery'); }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const pass = document.getElementById('regPass').value;
+            const confirm = document.getElementById('regConfirmPass').value;
+            const phone = document.getElementById('regPhone').value;
+
+            if (pass !== confirm) { showMsg("Passwords don't match! ❌"); return; }
+            if (!isStrongPassword(pass)) { showMsg("Password weak! A, a, 1, @ & 8 chars needed."); return; }
+            if (!isValidPhone(phone)) { showMsg("Phone must be 10-15 digits. 📱"); return; }
+
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            if (users.some(u => u.email === document.getElementById('regEmail').value)) {
+                showMsg("Email already exists! ⚠️");
+                return;
+            }
+
+            users.push({ name: document.getElementById('regName').value, phone, email: document.getElementById('regEmail').value, password: pass, status: 'active', ads: [] });
+            localStorage.setItem('users', JSON.stringify(users));
+            showMsg("Account created! ✨", 'success');
+            setTimeout(() => toggleForms('login'), 1500);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            if (email === 'admin@nexus.com' && pass === 'admin123') { window.location.href = 'admin.html'; return; }
+
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email && u.password === pass);
+
+            if (user) {
+                if (user.status === 'suspended') { showMsg("🚫 Account Suspended! Contact admin."); return; }
+                sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+                window.location.href = 'market.html';
+            } else {
+                showMsg("Invalid email or password! ❌");
+            }
+        }
+
+        function handleRecovery(e) {
+            e.preventDefault();
+            const email = document.getElementById('recEmail').value;
+            const phone = document.getElementById('recPhone').value;
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email && u.phone === phone);
+
+            if (user) {
+                document.getElementById('revealedPass').innerText = user.password;
+                document.getElementById('recoveryModal').classList.remove('hidden');
+            } else {
+                showMsg("Details don't match! 🕵️‍♂️");
+            }
+        }
+
+        function closeModal() { document.getElementById('recoveryModal').classList.add('hidden'); toggleForms('login'); }
+    </script>
+</body>
+</html>

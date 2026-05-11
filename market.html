@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Market</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .tab-content { display: none; }
+        .active-tab { display: block; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+</head>
+<body class="pb-20">
+    <!-- Navbar -->
+    <nav class="bg-white border-b sticky top-0 z-50 p-4 shadow-sm">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="font-black text-indigo-600 text-xl tracking-tighter">NEXUS MARKET</h1>
+            <div class="flex gap-4 items-center">
+                <span id="userName" class="text-xs font-bold text-slate-600"></span>
+                <button onclick="logout()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1 rounded-full">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tabs Navigation -->
+    <div class="max-w-6xl mx-auto mt-6 px-4">
+        <div class="flex gap-2 bg-slate-200 p-1 rounded-2xl w-fit">
+            <button onclick="showTab('feed')" class="px-6 py-2 rounded-xl text-sm font-bold transition-all bg-white shadow-sm" id="tabFeed">All Ads</button>
+            <button onclick="showTab('profile')" class="px-6 py-2 rounded-xl text-sm font-bold transition-all" id="tabProfile">My Profile</button>
+        </div>
+    </div>
+
+    <!-- 1. Feed Section -->
+    <main id="feed" class="tab-content active-tab max-w-6xl mx-auto p-4">
+        <div id="allAdsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+    </main>
+
+    <!-- 2. Profile Section -->
+    <main id="profile" class="tab-content max-w-6xl mx-auto p-4">
+        <div class="bg-indigo-600 rounded-[2rem] p-8 text-white mb-8 shadow-xl shadow-indigo-100">
+            <h2 class="text-2xl font-bold">Seller Dashboard</h2>
+            <p class="text-indigo-100 text-sm mt-1">Manage your listings and track performance</p>
+            <button onclick="openPostModal()" class="mt-6 bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-sm shadow-xl">Post New Ad</button>
+        </div>
+
+        <!-- Technical Support Section (Added) -->
+        <div class="bg-white border-2 border-dashed border-slate-200 rounded-[2rem] p-6 mb-8 text-center">
+            <h3 class="font-bold text-slate-800 mb-1">Technical Support</h3>
+            <p class="text-xs text-slate-500 mb-4">Working Hours: 9:00 AM - 12:00 PM</p>
+            <a href="https://wa.me/201035153618" target="_blank" class="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-2 rounded-full font-bold text-sm shadow-lg hover:bg-green-600 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.631 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp Support
+            </a>
+        </div>
+
+        <h3 class="font-bold text-slate-800 mb-4 px-2">My Listings</h3>
+        <div id="myAdsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </main>
+
+    <!-- Modal for Posting/Editing -->
+    <div id="postModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 max-h-[90vh] overflow-y-auto">
+            <h2 id="modalTitle" class="text-xl font-bold mb-6">Create New Ad</h2>
+            <form onsubmit="handleAdSubmit(event)" class="space-y-4">
+                <input type="hidden" id="editAdId">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 ml-2">Images (Can select multiple)</label>
+                    <input type="file" id="adImgs" accept="image/*" class="w-full text-xs mt-1" multiple>
+                </div>
+                <input type="text" id="adTitle" placeholder="Product Title" class="w-full bg-slate-100 p-4 rounded-xl outline-none" required>
+                <textarea id="adDesc" placeholder="Product Description" class="w-full bg-slate-100 p-4 rounded-xl outline-none h-24" required></textarea>
+                <div class="flex gap-2">
+                    <input type="number" id="adPrice" placeholder="Price (EGP)" class="w-1/2 bg-slate-100 p-4 rounded-xl outline-none" required>
+                    <input type="tel" id="adPhone" placeholder="Phone Number" class="w-1/2 bg-slate-100 p-4 rounded-xl outline-none" required>
+                </div>
+                <button id="submitBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg">Publish Ad</button>
+                <button type="button" onclick="closeModal('postModal')" class="w-full text-slate-400 text-sm">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Confirm Delete -->
+    <div id="deleteConfirmModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs rounded-[2rem] p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor font-bold"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </div>
+            <h3 class="font-bold text-slate-800 mb-2">Delete Ad?</h3>
+            <p class="text-xs text-slate-500 mb-6">This action cannot be undone. Are you sure?</p>
+            <div class="flex gap-2">
+                <button onclick="closeModal('deleteConfirmModal')" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold text-xs">Cancel</button>
+                <button id="finalDeleteBtn" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-xs">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Ad Details -->
+    <div id="viewModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden relative">
+            <button onclick="closeModal('viewModal')" class="absolute top-4 right-4 bg-white/80 rounded-full p-2 z-10">✕</button>
+            <div id="viewContent" class="max-h-[90vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
+        if(!currentUser) window.location.href = 'login.html';
+        document.getElementById('userName').innerText = `Hello, ${currentUser.name}`;
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active-tab'));
+            document.getElementById(tab).classList.add('active-tab');
+            document.getElementById('tabFeed').classList.toggle('bg-white', tab === 'feed');
+            document.getElementById('tabProfile').classList.toggle('bg-white', tab === 'profile');
+            renderAds();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function openPostModal(adId = null) {
+            const modal = document.getElementById('postModal');
+            const title = document.getElementById('modalTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if(adId) {
+                const users = JSON.parse(localStorage.getItem('users'));
+                const ad = users.flatMap(u => u.ads).find(a => a.id === adId);
+                document.getElementById('editAdId').value = ad.id;
+                document.getElementById('adTitle').value = ad.title;
+                document.getElementById('adDesc').value = ad.desc;
+                document.getElementById('adPrice').value = ad.price;
+                document.getElementById('adPhone').value = ad.phone;
+                title.innerText = "Edit Your Ad";
+                submitBtn.innerText = "Update Changes";
+            } else {
+                document.getElementById('editAdId').value = '';
+                document.querySelector('form').reset();
+                title.innerText = "Create New Ad";
+                submitBtn.innerText = "Publish Ad";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        async function handleAdSubmit(e) {
+            e.preventDefault();
+            const adId = document.getElementById('editAdId').value;
+            const files = document.getElementById('adImgs').files;
+            
+            let images = [];
+            if(files.length > 0) {
+                for(let file of files) {
+                    const base64 = await toBase64(file);
+                    images.push(base64);
+                }
+            }
+
+            let users = JSON.parse(localStorage.getItem('users'));
+            let uIdx = users.findIndex(u => u.email === currentUser.email);
+
+            if(adId) {
+                let aIdx = users[uIdx].ads.findIndex(a => a.id == adId);
+                users[uIdx].ads[aIdx] = {
+                    ...users[uIdx].ads[aIdx],
+                    title: document.getElementById('adTitle').value,
+                    desc: document.getElementById('adDesc').value,
+                    price: document.getElementById('adPrice').value,
+                    phone: document.getElementById('adPhone').value,
+                    img: images.length > 0 ? images : users[uIdx].ads[aIdx].img
+                };
+            } else {
+                const newAd = {
+                    id: Date.now(),
+                    seller: currentUser.email,
+                    sellerName: currentUser.name,
+                    title: document.getElementById('adTitle').value,
+                    desc: document.getElementById('adDesc').value,
+                    price: document.getElementById('adPrice').value,
+                    phone: document.getElementById('adPhone').value,
+                    img: images.length > 0 ? images : ['https://via.placeholder.com/400'],
+                    views: 0,
+                    isSold: false,
+                    soldAt: null
+                };
+                users[uIdx].ads.push(newAd);
+            }
+
+            localStorage.setItem('users', JSON.stringify(users));
+            sessionStorage.setItem('loggedInUser', JSON.stringify(users[uIdx]));
+            currentUser = users[uIdx];
+            closeModal('postModal');
+            renderAds();
+        }
+
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        function confirmDelete(adId) {
+            const modal = document.getElementById('deleteConfirmModal');
+            const btn = document.getElementById('finalDeleteBtn');
+            modal.classList.remove('hidden');
+            btn.onclick = () => {
+                deleteAd(adId);
+                closeModal('deleteConfirmModal');
+            };
+        }
+
+        function deleteAd(adId) {
+            let users = JSON.parse(localStorage.getItem('users'));
+            let uIdx = users.findIndex(u => u.email === currentUser.email);
+            users[uIdx].ads = users[uIdx].ads.filter(a => a.id != adId);
+            localStorage.setItem('users', JSON.stringify(users));
+            sessionStorage.setItem('loggedInUser', JSON.stringify(users[uIdx]));
+            currentUser = users[uIdx];
+            renderAds();
+        }
+
+        function markAsSold(adId, state) {
+            let users = JSON.parse(localStorage.getItem('users'));
+            users.forEach(u => {
+                u.ads.forEach(ad => {
+                    if(ad.id == adId) {
+                        ad.isSold = state;
+                        ad.soldAt = state ? Date.now() : null;
+                    }
+                });
+            });
+            localStorage.setItem('users', JSON.stringify(users));
+            let updatedSelf = users.find(u => u.email === currentUser.email);
+            sessionStorage.setItem('loggedInUser', JSON.stringify(updatedSelf));
+            currentUser = updatedSelf;
+            renderAds();
+        }
+
+        function checkAutoDelete() {
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            let changed = false;
+            users.forEach(u => {
+                const initialLen = u.ads.length;
+                u.ads = u.ads.filter(ad => {
+                    if(ad.isSold && ad.soldAt) {
+                        const hoursPassed = (Date.now() - ad.soldAt) / (1000 * 60 * 60);
+                        return hoursPassed < 48; 
+                    }
+                    return true;
+                });
+                if(u.ads.length !== initialLen) changed = true;
+            });
+            if(changed) {
+                localStorage.setItem('users', JSON.stringify(users));
+                renderAds();
+            }
+        }
+
+        function viewAd(adId) {
+            const allUsers = JSON.parse(localStorage.getItem('users'));
+            let ad = allUsers.flatMap(u => u.ads).find(a => a.id == adId);
+
+            let users = JSON.parse(localStorage.getItem('users'));
+            users.forEach(u => u.ads.forEach(a => { if(a.id == adId) a.views++ }));
+            localStorage.setItem('users', JSON.stringify(users));
+
+            const viewContent = document.getElementById('viewContent');
+            viewContent.innerHTML = `
+                <div class="flex flex-col">
+                    <div class="flex overflow-x-auto snap-x gap-2 p-4 bg-slate-100">
+                        ${ad.img.map(img => `<img src="${img}" class="h-64 rounded-2xl snap-center shadow-md">`).join('')}
+                    </div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">${ad.title}</h2>
+                                <p class="text-indigo-600 text-xl font-black mt-1">${ad.price} EGP</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Listed by</span>
+                                <p class="font-bold text-slate-700">${ad.sellerName}</p>
+                            </div>
+                        </div>
+                        <hr class="my-6 border-slate-100">
+                        <h4 class="font-bold mb-2">Description</h4>
+                        <p class="text-slate-600 leading-relaxed mb-8">${ad.desc}</p>
+                        <a href="tel:${ad.phone}" class="block w-full bg-green-500 text-white text-center py-4 rounded-2xl font-bold shadow-lg">
+                            📞 Contact Seller (${ad.phone})
+                        </a>
+                    </div>
+                </div>`;
+            document.getElementById('viewModal').classList.remove('hidden');
+            renderAds();
+        }
+
+        function renderAds() {
+            checkAutoDelete();
+            const allUsers = JSON.parse(localStorage.getItem('users')) || [];
+            const allAdsGrid = document.getElementById('allAdsGrid');
+            const myAdsGrid = document.getElementById('myAdsGrid');
+            
+            allAdsGrid.innerHTML = '';
+            myAdsGrid.innerHTML = '';
+
+            allUsers.forEach(u => {
+                u.ads.forEach(ad => {
+                    if(!ad.isSold) {
+                        const card = `
+                        <div onclick="viewAd(${ad.id})" class="bg-white p-3 rounded-[2rem] shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all group">
+                            <img src="${ad.img[0]}" class="h-44 w-full object-cover rounded-[1.5rem] mb-3 group-hover:scale-[1.02] transition-transform">
+                            <div class="px-2">
+                                <h4 class="font-bold text-slate-800 truncate">${ad.title}</h4>
+                                <p class="text-indigo-600 font-bold">${ad.price} EGP</p>
+                                <p class="text-[10px] text-slate-400 mt-2 flex justify-between">
+                                    <span>👤 ${ad.sellerName}</span>
+                                    <span>👁️ ${ad.views}</span>
+                                </p>
+                            </div>
+                        </div>`;
+                        allAdsGrid.innerHTML += card;
+                    }
+
+                    if(ad.seller === currentUser.email) {
+                        const myCard = `
+                        <div class="bg-white p-4 rounded-[2rem] border border-slate-200 flex flex-col sm:flex-row gap-4 items-center ${ad.isSold ? 'opacity-75 grayscale-[0.5]' : ''}">
+                            <img src="${ad.img[0]}" class="w-24 h-24 object-cover rounded-2xl">
+                            <div class="flex-1 min-w-0 w-full">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold truncate text-slate-800">${ad.title} ${ad.isSold ? '<span class="text-red-500 text-[10px] bg-red-50 px-2 rounded-full">SOLD</span>' : ''}</h4>
+                                    <button onclick="confirmDelete(${ad.id})" class="text-red-400 hover:text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                                <p class="text-indigo-600 font-bold text-sm">${ad.price} EGP</p>
+                                <div class="flex flex-wrap gap-2 mt-3">
+                                    ${!ad.isSold ? 
+                                        `<button onclick="openPostModal(${ad.id})" class="text-[10px] font-bold bg-slate-100 px-3 py-1 rounded-lg hover:bg-indigo-600 hover:text-white">EDIT</button>
+                                         <button onclick="markAsSold(${ad.id}, true)" class="text-[10px] font-bold bg-green-500 text-white px-3 py-1 rounded-lg">MARK AS SOLD</button>` 
+                                        : 
+                                        `<button onclick="markAsSold(${ad.id}, false)" class="text-[10px] font-bold bg-indigo-600 text-white px-3 py-1 rounded-lg">RE-LIST PRODUCT</button>
+                                         <span class="text-[9px] text-slate-400 self-center">Auto-deletes in 48h</span>`
+                                    }
+                                </div>
+                            </div>
+                        </div>`;
+                        myAdsGrid.innerHTML += myCard;
+                    }
+                });
+            });
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        renderAds();
+        setInterval(checkAutoDelete, 60000);
+    </script>
+</body>
+</html>
