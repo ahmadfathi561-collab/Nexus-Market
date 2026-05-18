@@ -359,5 +359,54 @@
         renderAds();
         setInterval(checkAutoDelete, 60000);
     </script>
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // إعدادات فايربيز الخاصة بمشروعك Nexus
+  const firebaseConfig = {
+    apiKey: "AIzaSyDzLe3jTcocOUATfmbnICIbGoz7Shl8RA",
+    authDomain: "nexus-d563a.firebaseapp.com",
+    projectId: "nexus-d563a",
+    storageBucket: "nexus-d563a.appspot.com",
+    messagingSenderId: "856502668187",
+    appId: "1:856502668187:web:e3f2832077e5ba1c76da2f" // تم إكمال الـ AppId بناءً على مشروعك
+  };
+
+  // تهيئة فايربيز
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ربط الفورم وإرسال البيانات
+  // تأكد إن الفورم عندك ليها id="productForm" أو عدله هنا بناءً على كودك
+  const form = document.getElementById("productForm");
+  
+  if(form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault(); // منع الصفحة من التحديث التلقائي
+
+      // اسحب القيم من الـ Inputs (تأكد من الـ IDs بتاعة الـ Inputs عندك في الصفحة)
+      const title = document.getElementById("productTitle").value;
+      const price = document.getElementById("productPrice").value;
+      const phone = document.getElementById("productPhone").value;
+
+      try {
+        // رفع البيانات السحابية إلى كوليكشن اسمه products
+        const docRef = await addDoc(collection(db, "products"), {
+          title: title,
+          price: price,
+          phone: phone,
+          createdAt: new Date()
+        });
+        
+        alert("تم رفع منتجك بنجاح على قاعدة البيانات السحابية!");
+        form.reset(); // تصفير الفورم بعد الرفع
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        alert("عفواً، حدث خطأ أثناء الرفع!");
+      }
+    });
+  }
+</script>
 </body>
 </html>
