@@ -197,5 +197,58 @@
         function logout() { window.location.href = 'login.html'; }
         loadUsers();
     </script>
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDzLe3jTcocOUATfmbnICIbGoz7Shl8RA",
+    authDomain: "nexus-d563a.firebaseapp.com",
+    projectId: "nexus-d563a",
+    storageBucket: "nexus-d563a.appspot.com",
+    messagingSenderId: "856502668187",
+    appId: "1:856502668187:web:e3f2832077e5ba1c76da2f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // دالة جلب البيانات من فايربيز وعرضها في الجدول
+  async function loadProducts() {
+    // تأكد إن عندك <tbody> جوه الجدول في الـ HTML واديله id="adminTableBody"
+    const tableBody = document.getElementById("adminTableBody");
+    if(!tableBody) return;
+
+    tableBody.innerHTML = "<tr><td colspan='3'>جاري تحميل البيانات السحابية...</td></tr>";
+
+    try {
+      // جلب البيانات وترتيبها من الأحدث للأقدم
+      const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      
+      tableBody.innerHTML = ""; // تفريغ رسالة التحميل
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        
+        // بناء صفوف الجدول بالبيانات الحقيقية
+        const row = `
+          <tr>
+            <td>${data.title}</td>
+            <td>${data.price} ج.م</td>
+            <td>${data.phone}</td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    } catch (error) {
+      console.error("Error fetching documents: ", error);
+      tableBody.innerHTML = "<tr><td colspan='3'>حدث خطأ أثناء جلب البيانات!</td></tr>";
+    }
+  }
+
+  // تشغيل الدالة تلقائياً أول ما الصفحة تفتح
+  window.onload = loadProducts;
+</script>
 </body>
 </html>
