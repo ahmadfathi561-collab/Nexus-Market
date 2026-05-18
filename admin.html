@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus | Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
@@ -18,11 +18,10 @@
 <body class="p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
         <header class="flex justify-between items-center mb-10">
             <div>
                 <h1 class="text-3xl font-black text-slate-900 tracking-tighter italic">NEXUS ADMIN</h1>
-                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">System Management & Analytics</p>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">System Management & Analytics (Cloud Database)</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="location.href='market.html'" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm">Marketplace</button>
@@ -30,37 +29,35 @@
             </div>
         </header>
 
-        <!-- Stats -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left">
             <div class="bg-white p-6 rounded-3xl border border-slate-200 flex items-center gap-4">
                 <div class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl text-2xl">👥</div>
                 <div>
-                    <p class="text-xs font-bold text-slate-400 uppercase">Total Users</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase">Total Advertisers</p>
                     <p id="statUsers" class="text-2xl font-black text-slate-800">0</p>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-3xl border border-slate-200 flex items-center gap-4">
                 <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl text-2xl">📦</div>
                 <div>
-                    <p class="text-xs font-bold text-slate-400 uppercase">Active Ads</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase">Active Cloud Ads</p>
                     <p id="statAds" class="text-2xl font-black text-slate-800">0</p>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <!-- Sidebar: Users List -->
             <aside class="lg:col-span-1 glass-panel p-5 rounded-[2rem] shadow-sm">
-                <h2 class="text-xs font-black uppercase text-slate-400 mb-4 px-2">Accounts</h2>
-                <input type="text" id="userSearch" oninput="loadUsers()" placeholder="Search users..." class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none mb-4">
-                <div id="usersList" class="space-y-2 custom-scrollbar max-h-[500px] overflow-y-auto pl-1"></div>
+                <h2 class="text-xs font-black uppercase text-slate-400 mb-4 px-2">Advertisers (Phones)</h2>
+                <input type="text" id="userSearch" placeholder="Search by phone..." class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none mb-4">
+                <div id="usersList" class="space-y-2 custom-scrollbar max-h-[500px] overflow-y-auto pl-1">
+                    </div>
             </aside>
 
-            <!-- Main Content Area -->
             <main class="lg:col-span-3">
                 <div id="placeholderView" class="glass-panel rounded-[2.5rem] p-20 flex flex-col items-center justify-center text-center min-h-[400px]">
                     <div class="text-6xl mb-4 opacity-20">📡</div>
-                    <p class="text-slate-400 font-bold text-sm uppercase tracking-widest">Select a user to review data</p>
+                    <p class="text-slate-400 font-bold text-sm uppercase tracking-widest">Select a phone number to review listings</p>
                 </div>
 
                 <div id="userProfileView" class="hidden">
@@ -74,181 +71,163 @@
         </div>
     </div>
 
-    <script>
-        let selectedUserEmail = '';
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // إعدادات فايربيز السحابية الخاصة بمشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzLe3jTcocOUATfmbnICIbGoz7Shl8RA",
+            authDomain: "nexus-d563a.firebaseapp.com",
+            projectId: "nexus-d563a",
+            storageBucket: "nexus-d563a.appspot.com",
+            messagingSenderId: "856502668187",
+            appId: "1:856502668187:web:e3f2832077e5ba1c76da2f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allProducts = []; // لتخزين المنتجات القادمة من السيرفر
+        let selectedPhone = ''; // الرقم المحدد حالياً
+
         const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
 
-        function loadUsers() {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
+        // دالة جلب البيانات من السيرفر وعرضها
+        async function loadCloudData() {
+            try {
+                const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                allProducts = [];
+                querySnapshot.forEach((doc) => {
+                    allProducts.push({ id: doc.id, ...doc.data() });
+                });
+
+                // تحديث العداد اللي فوق للإعلانات النشطة
+                document.getElementById('statAds').innerText = allProducts.length;
+
+                renderAdvertisersList();
+            } catch (error) {
+                console.error("Error loading cloud data: ", error);
+            }
+        }
+
+        // دالة استخراج أرقام الهواتف الفريدة وعرضها في القائمة الجانبية
+        function renderAdvertisersList() {
             const searchTerm = document.getElementById('userSearch').value.toLowerCase();
             const list = document.getElementById('usersList');
             
-            document.getElementById('statUsers').innerText = users.length;
-            let totalAds = 0;
-            users.forEach(u => totalAds += (u.ads ? u.ads.length : 0));
-            document.getElementById('statAds').innerText = totalAds;
+            // تجميع الأرقام الفريدة (كل معلن برقم تليفونه)
+            const phones = [...new Set(allProducts.map(p => p.phone))].filter(p => p && p.toLowerCase().includes(searchTerm));
+            
+            // تحديث عداد المعلنين
+            document.getElementById('statUsers').innerText = phones.length;
 
-            const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm) || u.email.toLowerCase().includes(searchTerm));
-
-            list.innerHTML = filteredUsers.map(user => `
-                <div onclick="viewUser('${user.email}')" class="p-4 rounded-2xl cursor-pointer border flex items-center justify-between transition-all ${selectedUserEmail === user.email ? 'active-user' : 'bg-white border-transparent shadow-sm hover:border-indigo-100'}">
-                    <div class="min-w-0 text-left">
-                        <p class="font-black text-sm truncate">${user.name}</p>
-                        <p class="text-[10px] opacity-60 truncate">${user.email}</p>
+            list.innerHTML = phones.map(phone => {
+                const userAdsCount = allProducts.filter(p => p.phone === phone).length;
+                return `
+                    <div onclick="viewPhoneListings('${phone}')" class="p-4 rounded-2xl cursor-pointer border flex items-center justify-between transition-all ${selectedPhone === phone ? 'active-user' : 'bg-white border-transparent shadow-sm hover:border-indigo-100'}">
+                        <div class="min-w-0 text-left">
+                            <p class="font-black text-sm truncate">رقم التواصل: ${phone}</p>
+                            <p class="text-[10px] opacity-60 truncate">عدد الإعلانات: ${userAdsCount}</p>
+                        </div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
                     </div>
-                    <div class="w-2.5 h-2.5 rounded-full ${user.status === 'active' ? 'bg-green-400' : 'bg-red-500'}"></div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        function viewUser(email) {
-            selectedUserEmail = email;
-            loadUsers();
-            const user = (JSON.parse(localStorage.getItem('users')) || []).find(u => u.email === email);
+        // دالة عرض تفاصيل رقم معين وإعلاناته
+        function viewPhoneListings(phone) {
+            selectedPhone = phone;
+            renderAdvertisersList(); // لإعادة تلوين الخيار النشط بالبنفسجي
+
             document.getElementById('placeholderView').classList.add('hidden');
             document.getElementById('userProfileView').classList.remove('hidden');
 
+            // عرض كارت بيانات المعلن
             document.getElementById('userInfoCard').innerHTML = `
                 <div class="flex flex-col md:flex-row justify-between items-start gap-6 text-left">
                     <div class="flex-1">
-                        <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase mb-3 inline-block">User Profile</span>
-                        <h2 class="text-3xl font-black text-slate-900">${user.name}</h2>
-                        <p class="text-indigo-600 font-bold mb-6">${user.email}</p>
-                        <div class="flex gap-3">
-                            <button onclick="updateStatus('${user.email}')" class="bg-slate-900 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-indigo-600 transition-all shadow-md">
-                                ${user.status === 'active' ? 'Suspend Account' : 'Activate Account'}
-                            </button>
-                            <button onclick="removeAccount('${user.email}')" class="bg-red-50 text-red-600 px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-all">Delete Account</button>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 w-full md:w-64">
-                        <p class="text-[10px] text-slate-400 font-black uppercase mb-1">Password</p>
-                        <div class="flex items-center justify-between">
-                            <input type="password" readonly value="${user.password || '****'}" id="passField" class="bg-transparent border-none font-black text-slate-700 w-full outline-none">
-                            <button onclick="togglePass()" class="text-[10px] font-black text-indigo-500 uppercase">Show</button>
-                        </div>
+                        <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase mb-3 inline-block">Cloud Verified Info</span>
+                        <h2 class="text-3xl font-black text-slate-900">${phone}</h2>
+                        <p class="text-indigo-600 font-bold mb-6">User active on cloud Firestore</p>
                     </div>
                 </div>`;
-            renderAds(user);
+
+            renderUserAds(phone);
         }
 
-        function renderAds(user) {
+        // دالة عرض إعلانات رقم الهاتف المحدد داخل الـ Ads Grid بالتصميم بتاعك
+        function renderUserAds(phone) {
             const adsGrid = document.getElementById('adsGrid');
-            if (!user.ads || user.ads.length === 0) {
+            const filteredAds = allProducts.filter(p => p.phone === phone);
+
+            if (filteredAds.length === 0) {
                 adsGrid.innerHTML = `<div class="py-10 text-center bg-slate-50 rounded-2xl border border-dashed text-slate-400 text-xs font-bold uppercase">No active listings found</div>`;
                 return;
             }
-            adsGrid.innerHTML = user.ads.map((ad, idx) => `
+
+            adsGrid.innerHTML = filteredAds.map(ad => `
                 <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 text-left">
-                    <img src="${(ad.img && ad.img[0]) || 'https://via.placeholder.com/150'}" class="w-16 h-16 rounded-xl object-cover bg-slate-100">
+                    <img src="https://via.placeholder.com/150" class="w-16 h-16 rounded-xl object-cover bg-slate-100">
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between">
                             <h4 class="font-black text-slate-800 text-sm truncate uppercase">${ad.title}</h4>
                             <p class="text-indigo-600 font-black text-sm">${ad.price} <span class="text-[10px]">EGP</span></p>
                         </div>
-                        <p class="text-[10px] font-bold text-slate-400 mt-1">${ad.date || 'Today'} | Views: ${ad.views || 0}</p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-1">الرقم: ${ad.phone}</p>
                     </div>
-                    <button onclick="removeAd('${user.email}', ${idx})" class="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all">
+                    <button onclick="deleteCloudAd('${ad.id}', '${ad.phone}')" class="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                 </div>`).join('');
         }
 
-        function togglePass() {
-            const input = document.getElementById('passField');
-            input.type = input.type === 'password' ? 'text' : 'password';
-        }
-
-        function updateStatus(email) {
-            let users = JSON.parse(localStorage.getItem('users'));
-            const idx = users.findIndex(u => u.email === email);
-            users[idx].status = (users[idx].status === 'active') ? 'suspended' : 'active';
-            localStorage.setItem('users', JSON.stringify(users));
-            viewUser(email);
-            Toast.fire({ icon: 'info', title: 'Status updated' });
-        }
-
-        function removeAccount(email) {
+        // دالة مسح الإعلان من السيرفر مباشرة وحذفه عند كل الأجهزة في العالم
+        async function deleteCloudAd(id, phone) {
             Swal.fire({ 
-                title: 'Delete Account?', 
-                text: "All user data will be permanently removed.", 
+                title: 'مسح الإعلان؟', 
+                text: "سيتم حذف هذا الإعلان نهائياً من السيرفر السحابي.", 
                 icon: 'warning', 
                 showCancelButton: true, 
                 confirmButtonColor: '#d33', 
-                confirmButtonText: 'Delete' 
-            }).then((result) => {
+                confirmButtonText: 'حذف' 
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    let users = JSON.parse(localStorage.getItem('users')).filter(u => u.email !== email);
-                    localStorage.setItem('users', JSON.stringify(users));
-                    location.reload();
+                    try {
+                        await deleteDoc(doc(db, "products", id));
+                        Toast.fire({ icon: 'success', title: 'تم مسح الإعلان بنجاح من السيرفر' });
+                        // إعادة تحميل البيانات فوراً لتحديث الشاشة
+                        await loadCloudData();
+                        if (allProducts.filter(p => p.phone === phone).length > 0) {
+                            viewPhoneListings(phone);
+                        } else {
+                            // لو الرقم ملوش إعلانات تانية ارجع للوضع الافتراضي
+                            document.getElementById('placeholderView').classList.remove('hidden');
+                            document.getElementById('userProfileView').classList.add('hidden');
+                            selectedPhone = '';
+                            renderAdvertisersList();
+                        }
+                    } catch (error) {
+                        console.error("Error deleting document: ", error);
+                        Toast.fire({ icon: 'error', title: 'حدث خطأ أثناء الحذف!' });
+                    }
                 }
             });
         }
 
-        function removeAd(email, index) {
-            let users = JSON.parse(localStorage.getItem('users'));
-            const uIdx = users.findIndex(u => u.email === email);
-            users[uIdx].ads.splice(index, 1);
-            localStorage.setItem('users', JSON.stringify(users));
-            viewUser(email);
-            Toast.fire({ icon: 'success', title: 'Ad removed successfully' });
-        }
+        // ربط السيرش في القائمة الجانبية
+        document.getElementById('userSearch').addEventListener('input', renderAdvertisersList);
 
-        function logout() { window.location.href = 'login.html'; }
-        loadUsers();
+        // جعل الدوال متاحة على الـ Window لتعمل الأزرار داخل الأكواد الديناميكية
+        window.viewPhoneListings = viewPhoneListings;
+        window.deleteCloudAd = deleteCloudAd;
+        window.logout = function() { window.location.href = 'login.html'; };
+
+        // تشغيل التحميل السحابي بمجرد فتح لوحة التحكم
+        window.onload = loadCloudData;
     </script>
-    <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDzLe3jTcocOUATfmbnICIbGoz7Shl8RA",
-    authDomain: "nexus-d563a.firebaseapp.com",
-    projectId: "nexus-d563a",
-    storageBucket: "nexus-d563a.appspot.com",
-    messagingSenderId: "856502668187",
-    appId: "1:856502668187:web:e3f2832077e5ba1c76da2f"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // دالة جلب البيانات من فايربيز وعرضها في الجدول
-  async function loadProducts() {
-    // تأكد إن عندك <tbody> جوه الجدول في الـ HTML واديله id="adminTableBody"
-    const tableBody = document.getElementById("adminTableBody");
-    if(!tableBody) return;
-
-    tableBody.innerHTML = "<tr><td colspan='3'>جاري تحميل البيانات السحابية...</td></tr>";
-
-    try {
-      // جلب البيانات وترتيبها من الأحدث للأقدم
-      const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      
-      tableBody.innerHTML = ""; // تفريغ رسالة التحميل
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        
-        // بناء صفوف الجدول بالبيانات الحقيقية
-        const row = `
-          <tr>
-            <td>${data.title}</td>
-            <td>${data.price} ج.م</td>
-            <td>${data.phone}</td>
-          </tr>
-        `;
-        tableBody.innerHTML += row;
-      });
-    } catch (error) {
-      console.error("Error fetching documents: ", error);
-      tableBody.innerHTML = "<tr><td colspan='3'>حدث خطأ أثناء جلب البيانات!</td></tr>";
-    }
-  }
-
-  // تشغيل الدالة تلقائياً أول ما الصفحة تفتح
-  window.onload = loadProducts;
-</script>
 </body>
 </html>
