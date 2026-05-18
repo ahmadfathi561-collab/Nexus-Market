@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -40,7 +41,6 @@
             transform: translateY(-2px);
         }
 
-        /* تنسيق أيقونة العين */
         .password-container {
             position: relative;
             display: flex;
@@ -95,8 +95,7 @@
                 <p id="formSubtitle" class="text-slate-500 font-bold text-xs mt-1">Join the future.</p>
             </div>
 
-            <!-- Login Form -->
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3 animate__animated">
+            <form id="loginForm" class="space-y-3 animate__animated">
                 <input type="email" id="loginEmail" placeholder="Email Address" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
                 <div class="password-container">
                     <input type="password" id="loginPass" placeholder="Password" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
@@ -110,12 +109,11 @@
                 <div class="text-right">
                     <a href="#" onclick="showRecovery()" class="text-[11px] font-bold text-indigo-600 hover:underline">Forgot Password?</a>
                 </div>
-                <button class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:bg-indigo-700 transition-all active:scale-95">Sign In</button>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:bg-indigo-700 transition-all active:scale-95">Sign In</button>
                 <p class="text-center text-[11px] font-bold text-slate-400">New here? <a href="#" onclick="toggleForms('register')" class="text-indigo-600 hover:underline">Register</a></p>
             </form>
 
-            <!-- Register Form -->
-            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden-form animate__animated">
+            <form id="registerForm" class="space-y-3 hidden-form animate__animated">
                 <div class="grid grid-cols-2 gap-2"> 
                     <input type="text" id="regName" placeholder="Full Name" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-xs">
                     <input type="tel" id="regPhone" placeholder="Phone" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-xs">
@@ -143,25 +141,23 @@
                 </div>
 
                 <p class="text-[10px] text-slate-400 px-1 leading-tight -mt-1">Password must include (A, a, 1, @) & 8 chars.</p>
-                <button class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:bg-indigo-700 active:scale-95">Create Account</button>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:bg-indigo-700 active:scale-95">Create Account</button>
                 <p class="text-center text-[11px] font-bold text-slate-400">Back to <a href="#" onclick="toggleForms('login')" class="text-indigo-600 hover:underline">Login</a></p>
             </form>
 
-            <!-- Recovery Form -->
-            <form id="recoveryForm" onsubmit="handleRecovery(event)" class="space-y-3 hidden-form animate__animated">
+            <form id="recoveryForm" class="space-y-3 hidden-form animate__animated">
                 <p class="text-[11px] text-slate-500 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100 mb-2 leading-snug">
                     Enter email and phone to see your password.
                 </p>
                 <input type="email" id="recEmail" placeholder="Your Email" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
                 <input type="tel" id="recPhone" placeholder="Your Phone" required class="input-style w-full p-3.5 rounded-xl outline-none font-semibold text-slate-700 text-xs">
-                <button class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-black text-sm shadow-xl active:scale-95">Find My Password</button>
+                <button type="submit" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-black text-sm shadow-xl active:scale-95">Find My Password</button>
                 <p class="text-center text-[11px] font-bold text-slate-400"><a href="#" onclick="toggleForms('login')" class="text-indigo-600">Return to Login</a></p>
             </form>
 
         </div>
     </div>
 
-    <!-- Modal Password Found -->
     <div id="recoveryModal" class="fixed inset-0 hidden flex items-center justify-center p-6 z-50 bg-black/60 backdrop-blur-md">
         <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center animate__animated animate__bounceIn">
             <h3 class="text-xl font-black text-slate-800 mb-2 leading-tight">Password Found!</h3>
@@ -171,99 +167,182 @@
         </div>
     </div>
 
-    <script>
-        const forms = { login: document.getElementById('loginForm'), register: document.getElementById('registerForm'), recovery: document.getElementById('recoveryForm') };
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // إعدادات الـ Firebase الخاصة بمشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzLe3jTcocOUATfmbnICIbGoz7Shl8RA",
+            authDomain: "nexus-d563a.firebaseapp.com",
+            projectId: "nexus-d563a",
+            storageBucket: "nexus-d563a.appspot.com",
+            messagingSenderId: "856502668187",
+            appId: "1:856502668187:web:e3f2832077e5ba1c76da2f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const forms = { 
+            login: document.getElementById('loginForm'), 
+            register: document.getElementById('registerForm'), 
+            recovery: document.getElementById('recoveryForm') 
+        };
         const msgBox = document.getElementById('msgBox');
         const msgContent = document.getElementById('msgContent');
 
-        // وظيفة إظهار وإخفاء كلمة المرور
-        function togglePassword(inputId) {
+        // جعل الدوال متاحة للـ HTML (Global Scope)
+        window.togglePassword = function(inputId) {
             const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
+            input.type = input.type === "password" ? "text" : "password";
         }
 
-        function showMsg(text, type = 'error') {
-            msgContent.innerText = text;
-            msgBox.className = `rounded-xl text-center p-3 text-xs font-bold animate__animated animate__shakeX show shadow-lg ${type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`;
-            
-            setTimeout(() => {
-                msgBox.classList.remove('show');
-            }, 3000);
-        }
-
-        function isStrongPassword(pass) { return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pass); }
-        function isValidPhone(phone) { return /^[0-9]{10,15}$/.test(phone); }
-
-        function toggleForms(target) {
+        window.toggleForms = function(target) {
             Object.values(forms).forEach(f => { f.classList.add('hidden-form'); f.classList.remove('animate__fadeInRight'); });
             forms[target].classList.remove('hidden-form');
             forms[target].classList.add('animate__fadeInRight');
             msgBox.classList.remove('show');
         }
 
-        function showRecovery() { toggleForms('recovery'); }
+        window.showRecovery = function() { window.toggleForms('recovery'); }
+        
+        window.closeModal = function() { 
+            document.getElementById('recoveryModal').classList.add('hidden'); 
+            window.toggleForms('login'); 
+        }
 
-        function handleRegister(e) {
+        function showMsg(text, type = 'error') {
+            msgContent.innerText = text;
+            msgBox.className = `rounded-xl text-center p-3 text-xs font-bold animate__animated animate__shakeX show shadow-lg ${type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`;
+            setTimeout(() => { msgBox.classList.remove('show'); }, 3000);
+        }
+
+        function isStrongPassword(pass) { return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pass); }
+        function isValidPhone(phone) { return /^[0-9]{10,15}$/.test(phone); }
+
+        // --- 1. التسجيل السحابي (Register) ---
+        forms.register.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
             const pass = document.getElementById('regPass').value;
             const confirm = document.getElementById('regConfirmPass').value;
-            const phone = document.getElementById('regPhone').value;
 
             if (pass !== confirm) { showMsg("Passwords don't match! ❌"); return; }
             if (!isStrongPassword(pass)) { showMsg("Password weak! A, a, 1, @ & 8 chars needed."); return; }
             if (!isValidPhone(phone)) { showMsg("Phone must be 10-15 digits. 📱"); return; }
 
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            if (users.some(u => u.email === document.getElementById('regEmail').value)) {
-                showMsg("Email already exists! ⚠️");
-                return;
+            Swal.fire({ title: 'Creating Account...', didOpen: () => { Swal.showLoading(); } });
+
+            try {
+                // التحقق من وجود الحساب مسبقاً
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    Swal.close();
+                    showMsg("Email already exists! ⚠️");
+                    return;
+                }
+
+                // إضافة الحساب الجديد لقاعدة البيانات
+                await addDoc(collection(db, "users"), {
+                    name,
+                    phone,
+                    email,
+                    password: pass,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                });
+
+                Swal.close();
+                showMsg("Account created! ✨", 'success');
+                forms.register.reset();
+                setTimeout(() => window.toggleForms('login'), 1500);
+
+            } catch (error) {
+                console.error(error);
+                Swal.close();
+                showMsg("Error creating account. ❌");
             }
+        });
 
-            users.push({ name: document.getElementById('regName').value, phone, email: document.getElementById('regEmail').value, password: pass, status: 'active', ads: [] });
-            localStorage.setItem('users', JSON.stringify(users));
-            showMsg("Account created! ✨", 'success');
-            setTimeout(() => toggleForms('login'), 1500);
-        }
-
-        function handleLogin(e) {
+        // --- 2. تسجيل الدخول السحابي (Login) ---
+        forms.login.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const pass = document.getElementById('loginPass').value;
 
-            if (email === 'admin@nexus.com' && pass === 'admin123') { window.location.href = 'admin.html'; return; }
-
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.email === email && u.password === pass);
-
-            if (user) {
-                if (user.status === 'suspended') { showMsg("🚫 Account Suspended! Contact admin."); return; }
-                sessionStorage.setItem('loggedInUser', JSON.stringify(user));
-                window.location.href = 'market.html';
-            } else {
-                showMsg("Invalid email or password! ❌");
+            // الحساب الإداري الثابت (Admin)
+            if (email === 'admin@nexus.com' && pass === 'admin123') { 
+                sessionStorage.setItem('loggedInUser', JSON.stringify({ name: 'Admin', email: email, role: 'admin' }));
+                window.location.href = 'admin.html'; 
+                return; 
             }
-        }
 
-        function handleRecovery(e) {
+            Swal.fire({ title: 'Verifying Credentials...', didOpen: () => { Swal.showLoading(); } });
+
+            try {
+                const q = query(collection(db, "users"), where("email", "==", email), where("password", "==", pass));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    let userData = null;
+                    querySnapshot.forEach(doc => { userData = doc.data(); });
+
+                    if (userData.status === 'suspended') {
+                        Swal.close();
+                        showMsg("🚫 Account Suspended! Contact admin.");
+                        return;
+                    }
+
+                    // حفظ بيانات الجلسة والتوجه للماركت
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(userData));
+                    Swal.close();
+                    window.location.href = 'market.html';
+                } else {
+                    Swal.close();
+                    showMsg("Invalid email or password! ❌");
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.close();
+                showMsg("Connection error! ❌");
+            }
+        });
+
+        // --- 3. استرجاع كلمة المرور سحابياً (Recovery) ---
+        forms.recovery.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('recEmail').value;
-            const phone = document.getElementById('recPhone').value;
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.email === email && u.phone === phone);
+            const email = document.getElementById('recEmail').value.trim().toLowerCase();
+            const phone = document.getElementById('recPhone').value.trim();
 
-            if (user) {
-                document.getElementById('revealedPass').innerText = user.password;
-                document.getElementById('recoveryModal').classList.remove('hidden');
-            } else {
-                showMsg("Details don't match! 🕵️‍♂️");
+            Swal.fire({ title: 'Searching Account...', didOpen: () => { Swal.showLoading(); } });
+
+            try {
+                const q = query(collection(db, "users"), where("email", "==", email), where("phone", "==", phone));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    let userData = null;
+                    querySnapshot.forEach(doc => { userData = doc.data(); });
+
+                    Swal.close();
+                    document.getElementById('revealedPass').innerText = userData.password;
+                    document.getElementById('recoveryModal').classList.remove('hidden');
+                    forms.recovery.reset();
+                } else {
+                    Swal.close();
+                    showMsg("Details don't match! 🕵️‍♂️");
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.close();
+                showMsg("Error recovering password.");
             }
-        }
-
-        function closeModal() { document.getElementById('recoveryModal').classList.add('hidden'); toggleForms('login'); }
+        });
     </script>
 </body>
 </html>
